@@ -1,120 +1,28 @@
 var root
-var treeData = [
-	{
-		"name": "Start",
-		"parent": "null",
-		"children": [
-			{
-				"name": "Level 2: A",
-				"parent": "Start",
-				"children": [
-					{
-						"name": "Son of A",
-						"parent": "Level 2: A"
-					},
-					{
-						"name": "Daughter of A",
-						"parent": "Level 2: A"
-					}
-				]
-			},
-			{
-				"name": "Level 2: B",
-				"parent": "Top Level"
-			}
-		]
-	}
-];
+var url = "https://en.wikipedia.org/wiki/Special:Random"
+var treeData = [];
+
+const depth = 3
 
 async function get_links() {
-	const { data } = await axios.get("http://localhost/nodes.php", { params: { url: "https://lichess.org"}})
+	const { data } = await axios.get("http://localhost/nodes.php", { params: { url , depth }})
 	return data;
-}
-
-async function generate_tree_2() {
-	var data = await get_links()
-	console.log(data.length)
-	for (let i = 0; i < data.length; i++) {
-		console.log(data[i])
-		treeData[0].children.push({name: data[i], parent: "Start", "size": 3938})
-	}
-
-	// ************** Generate the tree diagram  *****************
-	var margin = {top: 40, right: 120, bottom: 20, left: 120},
-		width = 960 - margin.right - margin.left,
-		height = 500 - margin.top - margin.bottom;
-
-	var i = 0;
-
-	var tree = d3.layout.tree()
-		.size([height, width]);
-
-	var diagonal = d3.svg.diagonal()
-		.projection(function(d) { return [d.x, d.y]; });
-
-	var svg = d3.select("body").append("svg")
-		.attr("width", width + margin.right + margin.left)
-		.attr("height", height + margin.top + margin.bottom)
-		.append("g")
-		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	root = treeData[0];
-
-	update(root);
-
-	function update(source) {
-
-		// Compute the new tree layout.
-		var nodes = tree.nodes(root).reverse(),
-			links = tree.links(nodes);
-
-		// Normalize for fixed-depth.
-		nodes.forEach(function(d) { d.y = d.depth * 100; });
-
-		// Declare the nodes…
-		var node = svg.selectAll("g.node")
-			.data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-		// Enter the nodes.
-		var nodeEnter = node.enter().append("g")
-			.attr("class", "node")
-			.attr("transform", function(d) { 
-				return "translate(" + d.x + "," + d.y + ")"; });
-
-		nodeEnter.append("circle")
-			.attr("r", 10)
-			.style("fill", "#fff");
-
-		nodeEnter.append("text")
-			.attr("y", function(d) { 
-				return d.children || d._children ? -18 : 18; })
-			.attr("dy", ".35em")
-			.attr("text-anchor", "middle")
-			.text(function(d) { return d.name; })
-			.style("fill-opacity", 1);
-
-		// Declare the links…
-		var link = svg.selectAll("path.link")
-			.data(links, function(d) { return d.target.id; });
-
-		// Enter the links.
-		link.enter().insert("path", "g")
-			.attr("class", "link")
-			.attr("d", diagonal);
-
-	}
 }
 
 async function generate_tree() {
 	var data = await get_links()
+  console.log(data)
 	console.log(data.length)
-	for (let i = 0; i < data.length; i++) {
-		console.log(data[i])
-		treeData[0].children.push({name: data[i], parent: "Start", "size": 3938})
-	}
+	// for (let i = 0; i < data.length; i++) {
+	// 	console.log(data[i])
+	// 	treeData[0].children.push({name: data[i].name, parent: "Start", "size": 3938})
+	// }
+  treeData = [data.nodes]
+  var allLinks = data.all_links
+  console.log(treeData)
 
-	var width = 600
-	var height = 600
+	var width = 1000
+	var height = 1000
 	var radius = width / 2
 
 	var svg = d3.select("body")
@@ -126,7 +34,7 @@ async function generate_tree() {
 
 
 	var cluster = d3.cluster()
-		.size([360, radius - 60]);  // 360 means whole circle. radius - 60 means 60 px of margin around dendrogram
+		.size([360, radius - 270]);  // 360 means whole circle. radius - 60 means 60 px of margin around dendrogram
 
 	// Give the data to this cluster layout:
 	var root = d3.hierarchy(treeData[0], function(d) {
@@ -158,18 +66,49 @@ async function generate_tree() {
 			return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")";
 		})
 		.append("circle")
-		.attr("r", 7)
-		.style("fill", "#69b3a2")
+		.attr("r", 2)
+		.style("fill", "#ffffff")
 		.attr("stroke", "black")
-		.style("stroke-width", 2)
+		.style("stroke-width", 0.5)
 
 	svg.selectAll("g")
 		.append("text")
 		.attr("dx", 12)
-		.attr("dy", "0.35em")
+		.attr("dy", 12)
 		.text(function(d) {return d.data.name})
 		.attr("font-family", "sans-serif")
 		.attr("font-size", "10px")
+
+	svg.selectAll("g")
+    .attr("class", function(d) {return d.data.name});
+  
+
+  let table = ""
+  console.log(allLinks)
+  for (let i = 0; i < allLinks.length; i++) {
+    var link = allLinks[i]
+    if (link.length > 40) {
+      link = link.substr(0, 40) + "..."
+    }
+    table += `<tr><td>${link}</td></tr>`
+  }
+
+  table = `<table>${table}</table`
+  console.log(table)
+  document.getElementById("list").innerHTML = table
+  console.log("finished")
 }
 
 generate_tree()
+
+
+console.log(document.getElementById("find"))
+document.getElementById("find").addEventListener("input", function() {
+  console.log("changed")
+  var value = document.getElementById("find").value
+  var node = document.getElementsByClassName(value)
+  console.log(node)
+  if (node.length == 0) {return}
+  node[0].classList.add("pink")
+  console.log("Node: ", node)
+})
