@@ -5,7 +5,8 @@ var url = ""
 var depth
 
 async function get_links(url, depth) {
-	const { data } = await axios.get("http://localhost/nodes.php", { params: { url , depth }})
+  const hosturl = "http://localhost/nodes.php"
+	const { data } = await axios.get(hosturl, { params: { url , depth }})
 	return data;
 }
 
@@ -24,8 +25,8 @@ async function generate_tree(url, depth) {
   var allLinks = data.all_links
   console.log(treeData)
 
-	var width = 1000
-	var height = 1000
+	var width = 2000
+	var height = 2000
 	var radius = width / 2
 
 	var svg = d3.select("body")
@@ -101,16 +102,42 @@ async function generate_tree(url, depth) {
   console.log(allLinks)
   for (let i = 0; i < allLinks.length; i++) {
     var link = allLinks[i]
+    var shortlink = link
     if (link.length > 40) {
-      link = link.substr(0, 40) + "..."
+      shortlink = link.substr(0, 40) + "..."
     }
-    table += `<tr><td>${link}</td></tr>`
+    table += `<tr><td id="${link}">${shortlink}</td></tr>`
   }
 
   table = `<table>${table}</table`
   console.log(table)
   document.getElementById("list").innerHTML = table
   console.log("finished")
+
+  var trs = document.querySelectorAll("tr")
+  for (let i = 0; i < trs.length; i++) {
+    trs[i].addEventListener("mouseover", event => {
+      console.log(event.target)
+      var element = document.getElementsByClassName(event.target.id)
+      console.log(element)
+      if (element.length == 0) {
+        return
+      }
+
+      element[0].classList.add("pink")
+    })
+
+    trs[i].addEventListener("mouseout", event => {
+      console.log(event.target)
+      var element = document.getElementsByClassName(event.target.id)
+      console.log(element)
+      if (element.length == 0) {
+        return
+      }
+
+      element[0].classList.remove("pink")
+    })
+  }
 }
 
 generate_tree("https://en.wikipedia.org/wiki/Special:Random", 3)
