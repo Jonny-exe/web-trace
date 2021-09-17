@@ -1,3 +1,9 @@
+<?php
+
+if ($_GET["url"]) {
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -39,11 +45,12 @@ body {
 #list {
   position: absolute;
   left: 0;
+  height: 90%;
   top: 0;
   background: black;
   color: white;
   opacity: 50%;
-  text-overflow: auto;
+  overflow-y: auto;
 }
 #inputs {
   padding: 1%;
@@ -78,7 +85,11 @@ body {
     
   <div class="form-group">
     <label for="exampleInputName2">Depth</label>
-    <input type="number" class="form-control" id="exampleInputName2" placeholder="3">
+    <input value="3" id="depth" type="number" class="form-control" id="exampleInputName2" placeholder="3">
+  </div>
+  <div class="form-group">
+    <label for="exampleInputName2">Root url</label>
+    <input id="url" type="text" class="form-control" id="exampleInputName2" placeholder="http://">
   </div>
 </div>
 </body>

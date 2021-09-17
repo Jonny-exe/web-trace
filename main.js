@@ -1,22 +1,25 @@
 var root
-var url = "https://en.wikipedia.org/wiki/Special:Random"
 var treeData = [];
 
-const depth = 3
+var url = ""
+var depth
 
-async function get_links() {
+async function get_links(url, depth) {
 	const { data } = await axios.get("http://localhost/nodes.php", { params: { url , depth }})
 	return data;
 }
 
-async function generate_tree() {
-	var data = await get_links()
+async function generate_tree(url, depth) {
+	var data = await get_links(url, depth)
   console.log(data)
 	console.log(data.length)
+  document.querySelector("svg")?.remove()
 	// for (let i = 0; i < data.length; i++) {
 	// 	console.log(data[i])
 	// 	treeData[0].children.push({name: data[i].name, parent: "Start", "size": 3938})
 	// }
+  document.getElementById("root")?.remove()
+  console.log(document.getElementById("root"))
   treeData = [data.nodes]
   var allLinks = data.all_links
   console.log(treeData)
@@ -31,10 +34,17 @@ async function generate_tree() {
 			.attr("height", height)
 		.append("g")
 			.attr("transform", "translate(" + radius + "," + radius + ")");
+ 
+  let zoom = d3.zoom()
+    .on('zoom', handleZoom);
 
+  function handleZoom() {
+      d3.select('g')
+        .attr('transform', d3.event.transform);
+  }
 
 	var cluster = d3.cluster()
-		.size([360, radius - 270]);  // 360 means whole circle. radius - 60 means 60 px of margin around dendrogram
+		.size([360, radius - 180]);  // 360 means whole circle. radius - 60 means 60 px of margin around dendrogram
 
 	// Give the data to this cluster layout:
 	var root = d3.hierarchy(treeData[0], function(d) {
@@ -47,6 +57,7 @@ async function generate_tree() {
 		.angle(function(d) { return d.x / 180 * Math.PI; })
 		.radius(function(d) { return d.y; });
 
+
 	// Add the links between nodes:
 	svg.selectAll('path')
 		.data(root.links())
@@ -55,6 +66,9 @@ async function generate_tree() {
 		.attr("d", linksGenerator)
 		.style("fill", 'none')
 		.attr("stroke", '#ccc')
+ 
+  d3.select('svg')
+    .call(zoom);
 
 
 	// Add a circle for each node.
@@ -99,7 +113,7 @@ async function generate_tree() {
   console.log("finished")
 }
 
-generate_tree()
+generate_tree("https://en.wikipedia.org/wiki/Special:Random", 3)
 
 
 console.log(document.getElementById("find"))
@@ -111,4 +125,18 @@ document.getElementById("find").addEventListener("input", function() {
   if (node.length == 0) {return}
   node[0].classList.add("pink")
   console.log("Node: ", node)
+})
+
+document.getElementById("url").addEventListener("change", function() {
+  console.log("changed")
+  var value = document.getElementById("url").value
+  url = value
+  console.log(value)
+  generate_tree(value, depth)
+})
+
+document.getElementById("depth").addEventListener("change", function() {
+  var value = document.getElementById("url").value
+  depth = value;
+  generate_tree(url, value)
 })
